@@ -1,0 +1,103 @@
+```{r}
+library(e1071)
+library(gmodels)
+
+bk<- read.csv("c:/r/bk_1.csv",stringsAsFactors = T)
+bk<- bk[-c(1,2,4,7,8,9,12,14,20,28,29)]
+bk_1<- na.omit(bk)
+
+quantile(bk$정가.숫자,na.rm=T)
+
+sample<- data.frame("남치니",50,32000,50,4,"튜브형",1,1,'x','o',5,1,2,'유기','x',1,'x',2)
+colnames(sample) <-  colnames(bk_1)
+sample
+
+length(bk_1$정가.숫자)-(length(bk_1$정가.숫자)*0.975)
+
+sort(bk_1$정가.숫자)
+
+bk_2<- bk_1[bk_1$정가.숫자>20000,]
+bk_2<- bk_2[bk_2$정가.숫자<58000,]
+
+for (i in c(1:8)){
+  bk_2[bk_2$정가.숫자 >= 13000 & bk_2$정가.숫자 < 13000+(6625*i),"정가.숫자"]<- i
+}
+bk_2
+
+bk_2$정가.숫자<-as.factor(bk_2$정가.숫자)
+bk_2$PA<- as.factor(bk_2$PA)
+bk_2$백탁<- as.factor(bk_2$백탁)
+bk_2$톤<- as.factor(bk_2$톤)
+#bk_2$보습<- as.factor(bk_2$보습)   #건드리면 떨어짐
+bk_2$끈적임<- as.factor(bk_2$끈적임)
+#bk_2$유분기<- as.factor(bk_2$유분기)   #건드리면 떨어짐
+bk_2$잔여감<- as.factor(bk_2$잔여감)
+bk_2$저자극<- as.factor(bk_2$저자극)
+bk_2$SPF<- as.factor(bk_2$SPF)
+bk_2$용량<- as.factor(bk_2$용량)
+bk_2
+
+
+m<- naiveBayes(bk_2[c(2,4:18)], bk_2$정가.숫자, laplace=1) # 학습을 계획해서 m이라는 모델을 만들었고 
+m
+
+m2<- predict(m,bk_2[c(2,4:18)],type='class') # 내가 만든 m이라는 모델을 가지고 다시 mail을 예측해본다.
+m2
+
+m2<- predict(m,sample[c(2,4:18)]) # 만든 m이라는 모델로 남치니 제품 예측.
+m2
+
+sum(bk_2$정가.숫자 != m2) # 예측결과 1개가 빗나갔다.
+
+38/132
+
+CrossTable(m2,bk_2$정가.숫자,
+           prop.chisq=F, prop.t=F,prop.r=F,
+           dnn = c('predicted', 'actual'))
+
+bk_2
+
+
+ggplot
+```
+
+```{r}
+
+
+bk<- read.csv("c:/r/bk_1.csv",stringsAsFactors = T)
+bk<- bk[-c(1,2,4,7,8,9,12,14,20,28,29)]
+bk_1<- na.omit(bk)
+
+aa <- bk_1$정가.숫자
+bb <- c(1:nrow(bk_1))
+
+for (i in c(1:8)){
+  bk_1[bk_1$정가.숫자 >= 13000 + (6625*(i-1)) & bk_1$정가.숫자 < 13000+(6625*i),"정가.숫자"]<- i
+}
+
+cc<- cbind(bk_1,aa,bb)
+
+bk_2 <- cc[c(20,1,19,3)]
+colnames(bk_2)<- c("num","name","price","grade")
+
+bk_2$grade<- as.factor(bk_2$grade)
+
+bk_2[bk_2$price>60000,"grade"]<- 8
+
+bk_2$grade<-factor(bk_2$grade,labels=c('13000~19600원','19600~26200원','26200~32800원','32800~39500원','39500~46100원','46100~52700원','52700~59300원','59300~66000원'))
+bk_2
+
+library(ggplot2)
+
+ggplot(data = bk_2,
+       mapping = aes(x =c(1:nrow(bk_2)), y = bk_2$price,colour = grade))+
+  geom_point(size = 2)+
+  geom_hline(yintercept=39500, linetype='dashed', color='red', size=1)+
+  geom_hline(yintercept=46125, linetype='dashed', color='red', size=1)+
+  labs(x = NULL, y= "가격",colour="가격군별 색상")+
+  theme(axis.text.x = element_blank())
+
+
+
+```
+
